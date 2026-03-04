@@ -1,6 +1,11 @@
-com\addressbook\service\DataStorageService.class
-com\addressbook\model\Contact.class
 com\addressbook\Main.class
-com\addressbook\Launcher.class
 com\addressbook\ui\MainController.class
+com\addressbook\ui\MainController$ContactListCell.class
+com\addressbook\utils\ContactImportExportUtil.class
 com\addressbook\model\ContactViewModel.class
+com\addressbook\utils\PinyinUtil.class
+com\addressbook\service\ContactManager.class
+com\addressbook\service\DataStorageService.class
+com\addressbook\ui\MainController$1.class
+com\addressbook\model\Contact.class
+com\addressbook\Launcher.class

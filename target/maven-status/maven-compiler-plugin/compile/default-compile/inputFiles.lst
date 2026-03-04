@@ -2,5 +2,8 @@ C:\Users\胡衍科\projectSet\AddressBook\AddressBook\src\main\java\com\addressb
 C:\Users\胡衍科\projectSet\AddressBook\AddressBook\src\main\java\com\addressbook\Main.java
 C:\Users\胡衍科\projectSet\AddressBook\AddressBook\src\main\java\com\addressbook\model\Contact.java
 C:\Users\胡衍科\projectSet\AddressBook\AddressBook\src\main\java\com\addressbook\model\ContactViewModel.java
+C:\Users\胡衍科\projectSet\AddressBook\AddressBook\src\main\java\com\addressbook\service\ContactManager.java
 C:\Users\胡衍科\projectSet\AddressBook\AddressBook\src\main\java\com\addressbook\service\DataStorageService.java
 C:\Users\胡衍科\projectSet\AddressBook\AddressBook\src\main\java\com\addressbook\ui\MainController.java
+C:\Users\胡衍科\projectSet\AddressBook\AddressBook\src\main\java\com\addressbook\utils\ContactImportExportUtil.java
+C:\Users\胡衍科\projectSet\AddressBook\AddressBook\src\main\java\com\addressbook\utils\PinyinUtil.java

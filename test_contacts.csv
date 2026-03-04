@@ -1,0 +1,3 @@
+姓名,电话,手机,通讯工具,电子邮件,个人主页,生日,工作单位,家庭地址,邮政编码,分组,备注,照片流(Base64)
+张三,010-12345678,13800138000,wx_zhangsan,zhangsan@example.com,https://zhangsan.com,1990-01-01,某某科技有限公司,北京市朝阳区某某路1号,100000,家人,这是张三的备注,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==
+李四,021-87654321,13900139000,qq_lisi,lisi@example.com,https://lisi.com,1992-05-15,上海某某贸易公司,上海市浦东新区某某路2号,200000,朋友,李四是好朋友,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==
