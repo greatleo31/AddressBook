@@ -271,6 +271,10 @@ public class MainController {
     Menu addToGroupMenu = new Menu("移动至分组...");
     listContextMenu.getItems().add(addToGroupMenu);
 
+    MenuItem deleteContact = new MenuItem("删除");
+    deleteContact.setOnAction(evt -> onDeleteContact());
+    listContextMenu.getItems().add(deleteContact);
+
     // 在右键菜单弹出前，动态填充子菜单 (读取当前全部可用分组)
     listContextMenu.setOnShowing(e -> {
       addToGroupMenu.getItems().clear();
@@ -284,6 +288,8 @@ public class MainController {
       removeGroup.setOnAction(evt -> assignSelectedContactsToGroup(""));
       addToGroupMenu.getItems().add(new SeparatorMenuItem());
       addToGroupMenu.getItems().add(removeGroup);
+
+      deleteContact.setDisable(contactListView.getSelectionModel().isEmpty());
     });
     // 将菜单附着到整个ListView
     contactListView.setContextMenu(listContextMenu);
@@ -340,15 +346,33 @@ public class MainController {
 
   @FXML
   private void onDeleteContact() {
-    ContactViewModel selected = contactListView.getSelectionModel().getSelectedItem();
-    if (selected != null) {
-      Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "确定要删除联系人 " + selected.getName() + " 吗？");
+    ObservableList<ContactViewModel> selectedItems = contactListView.getSelectionModel().getSelectedItems();
+    if (!selectedItems.isEmpty()) {
+      StringBuilder names = new StringBuilder();
+      for (int i = 0; i < selectedItems.size(); i++) {
+        names.append(selectedItems.get(i).getName());
+        if (i < selectedItems.size() - 1) {
+          names.append(", ");
+        }
+        if (i == 4 && selectedItems.size() > 5) {
+          names.append("等 ").append(selectedItems.size()).append(" 人");
+          break;
+        }
+      }
+
+      Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "确定要删除联系人 " + names.toString() + " 吗？");
       alert.setTitle("确认删除");
       alert.setHeaderText(null);
       Optional<ButtonType> alertResult = alert.showAndWait();
       if (alertResult.isPresent() && alertResult.get() == ButtonType.OK) {
-        contactManager.deleteContact(selected.toContact());
-        masterData.remove(selected);
+        // Create a copy of the list to avoid ConcurrentModificationException during
+        // removal
+        List<ContactViewModel> toDelete = new java.util.ArrayList<>(selectedItems);
+        for (ContactViewModel vm : toDelete) {
+          contactManager.deleteContact(vm.toContact());
+          masterData.remove(vm);
+        }
+        contactListView.getSelectionModel().clearSelection();
       }
     } else {
       Alert alert = new Alert(Alert.AlertType.WARNING, "请选择目标对象");
@@ -359,18 +383,14 @@ public class MainController {
   }
 
   @FXML
-  private void onImportExport() {
+  private void onImport() {
     java.util.List<String> choices = new java.util.ArrayList<>();
     choices.add("1. 导入 CSV 文件");
-    choices.add("2. 导出全部为 CSV");
-    choices.add("3. 导出选中为 CSV");
-    choices.add("4. 导入 vCard 文件");
-    choices.add("5. 导出全部为 vCard");
-    choices.add("6. 导出选中为 vCard");
+    choices.add("2. 导入 vCard 文件");
 
     ChoiceDialog<String> dialog = new ChoiceDialog<>(choices.get(0), choices);
-    dialog.setTitle("导入/导出");
-    dialog.setHeaderText("请选择要执行的操作");
+    dialog.setTitle("导入");
+    dialog.setHeaderText("请选择要导入的文件格式");
     dialog.setContentText("操作类型:");
 
     Optional<String> result = dialog.showAndWait();
@@ -387,55 +407,84 @@ public class MainController {
       javafx.stage.Window window = contactListView.getScene().getWindow();
 
       try {
-        if (choice.startsWith("1") || choice.startsWith("4")) {
-          // 导入
-          java.io.File file = fileChooser.showOpenDialog(window);
-          if (file != null) {
-            java.util.List<Contact> imported = choice.startsWith("1")
-                ? com.addressbook.utils.ContactImportExportUtil.importFromCsv(file)
-                : com.addressbook.utils.ContactImportExportUtil.importFromVCard(file);
+        java.io.File file = fileChooser.showOpenDialog(window);
+        if (file != null) {
+          java.util.List<Contact> imported = choice.startsWith("1")
+              ? com.addressbook.utils.ContactImportExportUtil.importFromCsv(file)
+              : com.addressbook.utils.ContactImportExportUtil.importFromVCard(file);
 
-            int count = 0;
-            for (Contact c : imported) {
-              contactManager.addContact(c);
-              masterData.add(new ContactViewModel(c));
-              count++;
-            }
-            Alert alert = new Alert(Alert.AlertType.INFORMATION, "成功导入 " + count + " 条联系人数据。");
-            alert.showAndWait();
+          int count = 0;
+          for (Contact c : imported) {
+            contactManager.addContact(c);
+            masterData.add(new ContactViewModel(c));
+            count++;
           }
-        } else {
-          // 导出
-          java.io.File file = fileChooser.showSaveDialog(window);
-          if (file != null) {
-            java.util.List<Contact> toExport = new java.util.ArrayList<>();
-            if (choice.startsWith("2") || choice.startsWith("5")) {
-              for (ContactViewModel vm : masterData) {
-                toExport.add(vm.toContact());
-              }
-            } else {
-              // 选中
-              for (ContactViewModel vm : contactListView.getSelectionModel().getSelectedItems()) {
-                toExport.add(vm.toContact());
-              }
-            }
-
-            if (toExport.isEmpty()) {
-              new Alert(Alert.AlertType.WARNING, "没有可导出的数据！").showAndWait();
-              return;
-            }
-
-            if (choice.contains("CSV")) {
-              com.addressbook.utils.ContactImportExportUtil.exportToCsv(toExport, file);
-            } else {
-              com.addressbook.utils.ContactImportExportUtil.exportToVCard(toExport, file);
-            }
-            new Alert(Alert.AlertType.INFORMATION, "成功导出 " + toExport.size() + " 条联系人数据。").showAndWait();
-          }
+          Alert alert = new Alert(Alert.AlertType.INFORMATION, "成功导入 " + count + " 条联系人数据。");
+          alert.showAndWait();
         }
       } catch (Exception ex) {
         ex.printStackTrace();
-        new Alert(Alert.AlertType.ERROR, "操作失败: " + ex.getMessage()).showAndWait();
+        new Alert(Alert.AlertType.ERROR, "导入失败: " + ex.getMessage()).showAndWait();
+      }
+    }
+  }
+
+  @FXML
+  private void onExport() {
+    java.util.List<String> choices = new java.util.ArrayList<>();
+    choices.add("1. 导出全部为 CSV");
+    choices.add("2. 导出选中为 CSV");
+    choices.add("3. 导出全部为 vCard");
+    choices.add("4. 导出选中为 vCard");
+
+    ChoiceDialog<String> dialog = new ChoiceDialog<>(choices.get(0), choices);
+    dialog.setTitle("导出");
+    dialog.setHeaderText("请选择导出格式和范围");
+    dialog.setContentText("操作类型:");
+
+    Optional<String> result = dialog.showAndWait();
+    if (result.isPresent()) {
+      String choice = result.get();
+
+      javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+      if (choice.contains("CSV")) {
+        fileChooser.getExtensionFilters().add(new javafx.stage.FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+      } else {
+        fileChooser.getExtensionFilters().add(new javafx.stage.FileChooser.ExtensionFilter("vCard Files", "*.vcf"));
+      }
+
+      javafx.stage.Window window = contactListView.getScene().getWindow();
+
+      try {
+        java.io.File file = fileChooser.showSaveDialog(window);
+        if (file != null) {
+          java.util.List<Contact> toExport = new java.util.ArrayList<>();
+          if (choice.startsWith("1") || choice.startsWith("3")) {
+            for (ContactViewModel vm : masterData) {
+              toExport.add(vm.toContact());
+            }
+          } else {
+            // 选中
+            for (ContactViewModel vm : contactListView.getSelectionModel().getSelectedItems()) {
+              toExport.add(vm.toContact());
+            }
+          }
+
+          if (toExport.isEmpty()) {
+            new Alert(Alert.AlertType.WARNING, "没有可导出的数据！").showAndWait();
+            return;
+          }
+
+          if (choice.contains("CSV")) {
+            com.addressbook.utils.ContactImportExportUtil.exportToCsv(toExport, file);
+          } else {
+            com.addressbook.utils.ContactImportExportUtil.exportToVCard(toExport, file);
+          }
+          new Alert(Alert.AlertType.INFORMATION, "成功导出 " + toExport.size() + " 条联系人数据。").showAndWait();
+        }
+      } catch (Exception ex) {
+        ex.printStackTrace();
+        new Alert(Alert.AlertType.ERROR, "导出失败: " + ex.getMessage()).showAndWait();
       }
     }
   }
@@ -495,6 +544,12 @@ public class MainController {
           db.setDragView(snapshot);
 
           event.consume();
+        }
+      });
+
+      setOnMouseClicked(event -> {
+        if (event.getClickCount() == 2 && !isEmpty()) {
+          onEditContact();
         }
       });
     }

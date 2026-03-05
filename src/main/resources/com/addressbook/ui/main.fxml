@@ -16,9 +16,9 @@
     <top>
         <ToolBar>
             <Button text="新建联系人" onAction="#onAddContact" />
-            <Button text="编辑" onAction="#onEditContact" />
             <Button text="删除" onAction="#onDeleteContact" />
-            <Button text="导入/导出" onAction="#onImportExport" />
+            <Button text="导入" onAction="#onImport" />
+            <Button text="导出" onAction="#onExport" />
             <Label text="    搜索:" />
             <TextField fx:id="searchField" promptText="输入姓名/手机/拼音检索" prefWidth="200" />
         </ToolBar>
